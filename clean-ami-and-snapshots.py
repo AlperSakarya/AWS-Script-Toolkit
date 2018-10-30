@@ -1,6 +1,7 @@
 # Script intended to delete snapshots and AMIs that are older than certain date
 # You need to replace YOUR_ACCOUNT_ID with your account ID :)
 # You need to change min and max dates in line 20 and 23
+# Make sure the region is correct in line 9
 
 import boto3
 import datetime
