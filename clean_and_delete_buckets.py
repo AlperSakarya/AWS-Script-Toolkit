@@ -4,7 +4,7 @@
 
 
 import boto3
-from botocore.exceptions import ClientError  
+from botocore.exceptions import ClientError
 from tqdm import tqdm
 
 s3 = boto3.client('s3')
@@ -12,58 +12,58 @@ s3 = boto3.client('s3')
 # List buckets
 response = s3.list_buckets()
 
-print("Existing S3 Buckets:")  
+print("Existing S3 Buckets:")
 for i, bucket in enumerate(response['Buckets']):
-  print(f"{i}. {bucket['Name']}")
-  
-# Get bucket to delete
-bucket_to_delete = input("Enter the number of the bucket to delete: ")
-bucket_to_delete = response['Buckets'][int(bucket_to_delete)]['Name']   
+    print(f"{i}. {bucket['Name']}")
 
-try:
-  # Check for Deny policy
-  policy = s3.get_bucket_policy(Bucket=bucket_to_delete)
-  if policy['Policy'].find('Deny') != -1:
-    print(f"Bucket {bucket_to_delete} has a Deny policy, quitting.")
+# Get bucket(s) to delete (allows multiple numbers)
+bucket_numbers_to_delete = input("Enter the number(s) of the bucket(s) to delete (comma-separated): ").split(',')
+
+# Validate and convert input to bucket names
+buckets_to_delete = []
+for num in bucket_numbers_to_delete:
+    try:
+        bucket_name = response['Buckets'][int(num.strip())]['Name']
+        buckets_to_delete.append(bucket_name)
+    except (ValueError, IndexError):
+        print(f"Invalid bucket number: {num}. Skipping.")
+
+if not buckets_to_delete:
+    print("No valid buckets selected. Exiting.")
     exit()
 
-except ClientError as e:
-  if e.response['Error']['Code'] == 'NoSuchBucketPolicy':
-    print(f"Bucket {bucket_to_delete} has no policy set.")
-  else:
-    raise
+for bucket_to_delete in buckets_to_delete:
+    try:
+        print(f"\nDeleting bucket: {bucket_to_delete}")
 
-confirm = input(f"Confirm delete bucket {bucket_to_delete} (y/n): ")
-if confirm.lower() == 'y':
+        # Delete all object versions (including delete markers) from the bucket
+        deleting = True
+        while deleting:
+            version_objs = s3.list_object_versions(Bucket=bucket_to_delete)
+            if 'Versions' in version_objs or 'DeleteMarkers' in version_objs:
+                objects_to_delete = []
 
-  deleting = True
-  
-  while deleting:
+                if 'Versions' in version_objs:
+                    objects_to_delete.extend(
+                        [{'Key': obj['Key'], 'VersionId': obj['VersionId']} for obj in version_objs['Versions']]
+                    )
 
-    objs = s3.list_objects_v2(Bucket=bucket_to_delete, MaxKeys=1000)
-    
-    if 'Contents' in objs and len(objs['Contents']) >= 1000:
-      print("Found more than 1000 objects, making a batch delete request for 1000 objects...")
-      delete_keys = {'Objects': [{'Key': obj['Key']} for obj in objs['Contents']]}
-      s3.delete_objects(Bucket=bucket_to_delete, Delete=delete_keys)
+                if 'DeleteMarkers' in version_objs:
+                    objects_to_delete.extend(
+                        [{'Key': obj['Key'], 'VersionId': obj['VersionId']} for obj in version_objs['DeleteMarkers']]
+                    )
 
-    elif 'Contents' in objs:
-      print("Less than 1000 objects, deleting individually")  
-      files = [obj['Key'] for obj in objs['Contents']]
-        
-      with tqdm(total=len(files)) as pbar:
-        for file in files:
-          s3.delete_object(Bucket=bucket_to_delete, Key=file)
-          pbar.update(1)
-          pbar.set_description(f"Deleting {file}")
+                if objects_to_delete:
+                    delete_keys = {'Objects': objects_to_delete}
+                    s3.delete_objects(Bucket=bucket_to_delete, Delete=delete_keys)
+                    print(f"Deleted {len(objects_to_delete)} object versions and delete markers from {bucket_to_delete}")
+            else:
+                deleting = False
+                print(f"No more object versions or delete markers in {bucket_to_delete}")
 
-    else:
-      deleting = False
-      print("No objects left to delete")
-      
-  s3.delete_bucket(Bucket=bucket_to_delete)
+        # Now delete the bucket
+        s3.delete_bucket(Bucket=bucket_to_delete)
+        print(f"Deleted bucket {bucket_to_delete}")
 
-  print(f"Deleted bucket {bucket_to_delete}")
-  
-else:
-  print("Delete canceled")
+    except ClientError as e:
+        print(f"Error deleting bucket {bucket_to_delete}: {e}")
