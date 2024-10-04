@@ -13,6 +13,9 @@ This Python script is designed to delete EC2 snapshots and AMIs that are older t
 ### tag-ebs-volumes.py
 Automates the process of tagging all EBS volumes in a specified AWS region with a custom key-value pair. It connects to AWS EC2, retrieves all volumes in the specified region (default is "us-east-1"), and adds a tag to each volume using the provided key ("backup") and value ("yes"). The script can be easily modified to apply different key-value pairs or to run in different AWS regions. It helps in organizing and managing EBS volumes by ensuring consistent tagging, which can be useful for cost tracking, backups, or automation workflows.
 
+### Handy-EC2 published in Jan 29, 2016 :)
+Handy-EC2 is a simple Python utility for managing AWS EC2 instances on a daily basis. It provides an easy way to list, start, stop, and SSH into your EC2 instances, displaying relevant information such as instance IDs, states, and public IPs. Simply replace the placeholder with your own SSH key path, and the tool will output a list of instances with interactive options to manage them. This streamlines common EC2 tasks for quick and efficient cloud management.
+
 ### get-underutilized-resoureces.py
 Connects to AWS Trusted Advisor to pull and refresh various cost optimization checks for underutilized or idle AWS resources such as EC2 instances, RDS databases, EBS volumes, Elastic IPs, and more. It lists flagged resources for each check, along with relevant metadata such as region, resource ID, and estimated savings, enabling cost optimization by identifying underutilized assets. The script supports checks for multiple resource types and prints flagged instances along with savings estimates and account details. This helps users quickly identify cost-saving opportunities and optimize resource usage across their AWS account.
 
