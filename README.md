@@ -13,8 +13,11 @@ This Python script is designed to delete EC2 snapshots and AMIs that are older t
 ### tag-ebs-volumes.py
 Automates the process of tagging all EBS volumes in a specified AWS region with a custom key-value pair. It connects to AWS EC2, retrieves all volumes in the specified region (default is "us-east-1"), and adds a tag to each volume using the provided key ("backup") and value ("yes"). The script can be easily modified to apply different key-value pairs or to run in different AWS regions. It helps in organizing and managing EBS volumes by ensuring consistent tagging, which can be useful for cost tracking, backups, or automation workflows.
 
-### get-underutilized-resoureces.py
+### get-underutilized-resources.py
 Connects to AWS Trusted Advisor to pull and refresh various cost optimization checks for underutilized or idle AWS resources such as EC2 instances, RDS databases, EBS volumes, Elastic IPs, and more. It lists flagged resources for each check, along with relevant metadata such as region, resource ID, and estimated savings, enabling cost optimization by identifying underutilized assets. The script supports checks for multiple resource types and prints flagged instances along with savings estimates and account details. This helps users quickly identify cost-saving opportunities and optimize resource usage across their AWS account.
+
+### preSignedURL-generator.py
+This Python script generates pre-signed URLs for objects stored in Amazon S3 buckets. It allows users to select one or more S3 buckets, specify an expiration time for the pre-signed URLs, and generates HTML and text files containing the download links for the objects in the selected buckets. The script provides options for creating combined reports for multiple buckets or separate reports for each bucket. This tool is useful for securely sharing S3 objects with time-limited access.
 
 ## Automated EC2 and EBS Snapshots (relevant before the AWS Backup Service)
 
